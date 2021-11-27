@@ -21,10 +21,14 @@ limitations under the License.
 #include "person_detect_model_data.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
-#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
+// #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
+#include "tensorflow/lite/micro/all_ops_resolver.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 
 #include <esp_heap_caps.h>
+#include "driver/gpio.h"
+#include "driver/ledc.h"
+#include "flash_led.h"
 
 // Globals, used for compatibility with Arduino-style sketches.
 namespace {
@@ -41,7 +45,7 @@ TfLiteTensor* input = nullptr;
 // signed value.
 
 // An area of memory to use for input, output, and intermediate arrays.
-constexpr int kTensorArenaSize = 135 * 1024;
+constexpr int kTensorArenaSize = 136 * 1024;
 static uint8_t *tensor_arena;//[kTensorArenaSize]; // Maybe we should move this to external
 }  // namespace
 
@@ -80,12 +84,16 @@ void setup() {
   //
   // tflite::AllOpsResolver resolver;
   // NOLINTNEXTLINE(runtime-global-variables)
-  static tflite::MicroMutableOpResolver<5> micro_op_resolver;
-  micro_op_resolver.AddAveragePool2D();
-  micro_op_resolver.AddConv2D();
-  micro_op_resolver.AddDepthwiseConv2D();
-  micro_op_resolver.AddReshape();
-  micro_op_resolver.AddSoftmax();
+  // static tflite::MicroMutableOpResolver<5> micro_op_resolver;
+  // micro_op_resolver.AddAveragePool2D();
+  // micro_op_resolver.AddConv2D();
+  // micro_op_resolver.AddDepthwiseConv2D();
+  // micro_op_resolver.AddReshape();
+  // micro_op_resolver.AddSoftmax();
+
+  // Currently use AllOpsResolver
+  // TODO (vietanhdev): Pick only neccessary ops
+  tflite::AllOpsResolver micro_op_resolver;
 
   // Build an interpreter to run the model with.
   // NOLINTNEXTLINE(runtime-global-variables)
@@ -102,6 +110,18 @@ void setup() {
 
   // Get information about the memory area to use for the model's input.
   input = interpreter->input(0);
+
+  // // Set LED pin as output
+  // gpio_pad_select_gpio(GPIO_NUM_4);
+  // gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
+  // ledc_channel_config_t ledc_channel;
+  // ledc_channel.channel = FLASH_LEDC_CHANNEL;
+  // ledc_channel.duty = 0;
+  // ledc_channel.gpio_num = LED_GPIO_NUM;
+  // ledc_channel.intr_type = LEDC_INTR_DISABLE;
+  // ledc_channel.speed_mode = FLASH_LEDC_SPEED_MODE;
+  // ledc_channel.timer_sel = LEDC_TIMER_1;
+  // ledc_channel_config(&ledc_channel);
 }
 
 // The name of this function is important for Arduino compatibility.
@@ -119,7 +139,7 @@ void loop() {
   TfLiteTensor* output = interpreter->output(0);
 
   // Process the inference results.
-  int8_t person_score = output->data.uint8[kPersonIndex];
-  int8_t no_person_score = output->data.uint8[kNotAPersonIndex];
+  int8_t person_score = output->data.int8[kPersonIndex];
+  int8_t no_person_score = output->data.int8[kNotAPersonIndex];
   RespondToDetection(error_reporter, person_score, no_person_score);
 }
