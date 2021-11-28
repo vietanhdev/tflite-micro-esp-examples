@@ -57,22 +57,16 @@ TfLiteStatus PerformCapture(tflite::ErrorReporter* error_reporter,
   if (ret != 0) {
     return kTfLiteError;
   }
-  // TF_LITE_REPORT_ERROR(error_reporter, "Image Captured\n");
-
-  // FIXME: fb->buf is uint8_t
-  // Treating uint8_t as int8_t should just work fine for now
-  memcpy(image_data, fb->buf, fb->len);
 
   // Convert buffer from BGR to RGB
   // And substract 128
-    // for (size_t i = 0; i < fb->len; i += 3) {
-    //   image_data[i] = (int8_t)((int)(fb->buf[i+2]) - 128);
-    //   image_data[i+1] = (int8_t)((int)(fb->buf[i+1]) - 128);
-    //   image_data[i+2] = (int8_t)((int)(fb->buf[i]) - 128);
-    // }
+    for (size_t i = 0; i < fb->len; i += 3) {
+      image_data[i] = (int8_t)((int)(fb->buf[i+2]) - 128);
+      image_data[i+1] = (int8_t)((int)(fb->buf[i+1]) - 128);
+      image_data[i+2] = (int8_t)((int)(fb->buf[i]) - 128);
+    }
 
   esp_camera_fb_return(fb);
-  /* here the esp camera can give you grayscale image directly */
   return kTfLiteOk;
 }
 

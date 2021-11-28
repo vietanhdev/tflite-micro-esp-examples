@@ -30,6 +30,8 @@ limitations under the License.
 #include "driver/ledc.h"
 #include "flash_led.h"
 
+#include "iot_servo.h"
+
 // Globals, used for compatibility with Arduino-style sketches.
 namespace {
 tflite::ErrorReporter* error_reporter = nullptr;
@@ -46,7 +48,8 @@ TfLiteTensor* input = nullptr;
 
 // An area of memory to use for input, output, and intermediate arrays.
 constexpr int kTensorArenaSize = 136 * 1024;
-static uint8_t *tensor_arena;//[kTensorArenaSize]; // Maybe we should move this to external
+static uint8_t* tensor_arena;  //[kTensorArenaSize]; // Maybe we should move
+                               //this to external
 }  // namespace
 
 // The name of this function is important for Arduino compatibility.
@@ -69,7 +72,8 @@ void setup() {
   }
 
   if (tensor_arena == NULL) {
-    tensor_arena = (uint8_t *) heap_caps_malloc(kTensorArenaSize, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    tensor_arena = (uint8_t*)heap_caps_malloc(
+        kTensorArenaSize, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
   }
   if (tensor_arena == NULL) {
     printf("Couldn't allocate memory of %d bytes\n", kTensorArenaSize);
@@ -111,17 +115,28 @@ void setup() {
   // Get information about the memory area to use for the model's input.
   input = interpreter->input(0);
 
-  // // Set LED pin as output
-  // gpio_pad_select_gpio(GPIO_NUM_4);
-  // gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
-  // ledc_channel_config_t ledc_channel;
-  // ledc_channel.channel = FLASH_LEDC_CHANNEL;
-  // ledc_channel.duty = 0;
-  // ledc_channel.gpio_num = LED_GPIO_NUM;
-  // ledc_channel.intr_type = LEDC_INTR_DISABLE;
-  // ledc_channel.speed_mode = FLASH_LEDC_SPEED_MODE;
-  // ledc_channel.timer_sel = LEDC_TIMER_1;
-  // ledc_channel_config(&ledc_channel);
+  servo_config_t servo_cfg = {
+      .max_angle = 180,
+      .min_width_us = 1000,
+      .max_width_us = 2000,
+      .freq = 50,
+      .timer_number = LEDC_TIMER_1,
+      .channels =
+          {
+              .servo_pin =
+                  {
+                      GPIO_NUM_14,
+                      GPIO_NUM_15,
+                  },
+              .ch =
+                  {
+                      LEDC_CHANNEL_1,
+                      LEDC_CHANNEL_2
+                  },
+          },
+      .channel_number = 2,
+  };
+  iot_servo_init(LEDC_LOW_SPEED_MODE, &servo_cfg);
 }
 
 // The name of this function is important for Arduino compatibility.

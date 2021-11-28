@@ -12,5 +12,6 @@ idf_component_register(
         "model_settings.cc"
         "person_detect_model_data.cc"
         "app_camera_esp.c"
+        "iot_servo.c"
     PRIV_REQUIRES console tflite-lib esp32-camera spi_flash
     INCLUDE_DIRS "")

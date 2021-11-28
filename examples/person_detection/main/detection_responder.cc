@@ -23,6 +23,8 @@ limitations under the License.
 #include "freertos/task.h"
 #include "freertos/queue.h"
 
+#include "iot_servo.h"
+
 // This dummy implementation writes person and no person scores to the error
 // console. Real applications will want to take some custom action instead, and
 // should implement their own versions of this function.
@@ -34,21 +36,11 @@ void RespondToDetection(tflite::ErrorReporter* error_reporter,
     // int valueChangeRate = 200;
     if (person_score > 50) {
         TF_LITE_REPORT_ERROR(error_reporter, "BOTTLE! BOTTLE!! BOTTLE!!!!!!");
-        // gpio_set_level(GPIO_NUM_4, 1);
-        // ledc_set_duty(FLASH_LEDC_SPEED_MODE, FLASH_LEDC_CHANNEL, 255);
-        // ledc_update_duty(FLASH_LEDC_SPEED_MODE, FLASH_LEDC_CHANNEL);
-        // int duty  = (1<<15) * 500 / 20000 ;//1638
-        // ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_1, duty);
-        // ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_1);
-        // vTaskDelay(valueChangeRate/portTICK_PERIOD_MS);
+        iot_servo_write_angle(LEDC_LOW_SPEED_MODE, 0, 100);
+        iot_servo_write_angle(LEDC_LOW_SPEED_MODE, 1, 50);
     } else {
         TF_LITE_REPORT_ERROR(error_reporter, "... ... ...");
-        // gpio_set_level(GPIO_NUM_4, 0);
-        // ledc_set_duty(FLASH_LEDC_SPEED_MODE, FLASH_LEDC_CHANNEL, 0);
-        // ledc_update_duty(FLASH_LEDC_SPEED_MODE, FLASH_LEDC_CHANNEL);
-        // int duty  = (1<<15) * 700 / 20000 ;//1638
-        // ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_1, duty);
-        // ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_1);
-        // vTaskDelay(valueChangeRate/portTICK_PERIOD_MS);
+        iot_servo_write_angle(LEDC_LOW_SPEED_MODE, 0, 50);
+        iot_servo_write_angle(LEDC_LOW_SPEED_MODE, 1, 100);
     }
 }
